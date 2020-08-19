@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>{{ package.name }}</title>
+        <meta charset="UTF-8" />
+    </head>
+    <body>
+		<p>{{ package.name }}</p>
+		<p>{{ package.description }}</p>
+		<p> Dependencies </p>
+        <ul>
+            {% for depend in package.depends %}
+              <li>{{ depend }}</li>
+            {% endfor %}  
+		</ul>
+		<p> Reverse dependencies </p>
+		<ul>
+            {% for rdepend in package.rdepends %}
+              <li>{{ rdepend }}</li>
+            {% endfor %}  
+        </ul>
+    </body>
+</html>

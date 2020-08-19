@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head lang="en">
+        <title>Index</title>
+        <meta charset="UTF-8" />
+    </head>
+    <body>
+        <ul>
+            {% for package in packages %}
+              <li>{{ package.name }}</li>
+            {% endfor %}  
+        </ul>
+    </body>
+</html>
