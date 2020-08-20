@@ -1,10 +1,6 @@
-from flask import Flask, render_template, session
-from flask_session import Session
+from flask import Flask, render_template
 
 app = Flask(__name__)
-SESSION_TYPE = 'filesystem'
-app.config.from_object(__name__)
-Session(app)
 
 class Package:
 	def __init__(self):
@@ -56,13 +52,16 @@ def create_packages():
 	packages_object.sort(key=lambda package: package.name)
 	return packages_object
 
+global packages_object
+packages_object = create_packages()
+
 @app.route('/')
 def display_all():
-	session['packages'] = create_packages()
-	return render_template('index.html', packages=session['packages'])
+	return render_template('index.html', packages=packages_object)
+
 @app.route('/<string:name>')
 def display_info(name):
-	for package in session['packages']:
+	for package in packages_object:
 		if getattr(package, 'name') == name:
 			return render_template('info.html', package=package)
 	return 'Error :('
