@@ -29,7 +29,10 @@ def search_rdepends(packages_object):
 				rdepends.append(getattr(package2, 'name'))
 
 def create_packages():
-	file = open('../status.real', 'r')
+	try:
+		file = open('/var/lib/dpkg/status', 'r')
+	except IOError:
+		file = open('status.real', 'r')
 	packages_raw = file.read().split('\n\n')
 	packages_object = []
 	for package_raw in packages_raw:
