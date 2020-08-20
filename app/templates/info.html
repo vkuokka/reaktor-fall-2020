@@ -5,18 +5,19 @@
         <meta charset="UTF-8" />
     </head>
     <body>
-		<p>{{ package.name }}</p>
+        <p><a href="/"><u>List all</u></a><p>
+		<h1>{{ package.name }}</h1>
 		<p>{{ package.description }}</p>
-		<p> Dependencies </p>
+		<h2> Dependencies </h2>
         <ul>
             {% for depend in package.depends %}
-              <li>{{ depend }}</li>
+            <li><a href="/{{ depend }}"> {{ depend }} </a></li>
             {% endfor %}  
 		</ul>
-		<p> Reverse dependencies </p>
+		<h2> Reverse dependencies </h2>
 		<ul>
             {% for rdepend in package.rdepends %}
-              <li>{{ rdepend }}</li>
+            <li><a href="/{{ rdepend }}"> {{ rdepend }} </a></li>
             {% endfor %}  
         </ul>
     </body>
