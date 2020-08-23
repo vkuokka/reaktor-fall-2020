@@ -1,19 +1,25 @@
+import re
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
 class Package:
-	def __init__(self):
-		self.name = None
-		self.description = None
-		self.depends = []
+	def __init__(self, name, depends, description):
+		self.name = name
+		self.depends = depends
+		self.description = description
 		self.rdepends = []
 
-def parse_depends(line):
+	def __str__(self):
+		return str(self.name) + '\n' + str(self.description) + '\n' + str(self.depends) + '\n' + str(self.rdepends)
+
+def parse_depends(depends):
 	names = []
-	separated = line.split(', ')
-	for separate in separated:
-		names.append(separate.split(' ')[0])
+	if depends == None:
+		return names
+	for separatedByPipe in depends.split(' | '):
+		for separatedByComma in separatedByPipe.split(', '):
+			names.append(separatedByComma.split(' ')[0])
 	return names
 
 def search_rdepends(packages_object):
@@ -24,36 +30,39 @@ def search_rdepends(packages_object):
 			if name in getattr(package2, 'depends'):
 				rdepends.append(getattr(package2, 'name'))
 
-def create_packages():
+def regex_packages():
 	try:
 		file = open('/var/lib/dpkg/status', 'r')
 	except IOError:
-		file = open('status.real', 'r')
+		try:
+			file = open('status.real', 'r')
+		except IOError:
+			raise SystemExit
+	regex = []
+	regex.append(re.compile(r'^Package:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL))
+	regex.append(re.compile(r'^Depends:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL))
+	regex.append(re.compile(r'^Description:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL))
 	packages_raw = file.read().split('\n\n')
 	packages_object = []
-	for package_raw in packages_raw:
-		if package_raw == '':
+	for package in packages_raw:
+		if package == '':
 			continue
-		lines = package_raw.split('\n')
-		package = Package()
-		for line in lines:
-			name_field = line.split(': ')
-			if name_field[0] == 'Package':
-				setattr(package, 'name', name_field[1])
-			elif name_field[0] == 'Description':
-				setattr(package, 'description', name_field[1])
-			elif name_field[0][0] == ' ':
-				setattr(package, 'description', str(getattr(package, 'description')) + name_field[0])
-			elif name_field[0] == 'Depends':
-				setattr(package, 'depends', parse_depends(name_field[1]))
-		packages_object.append(package)
+		package += '\nend'
+		found = []
+		for entry in regex:
+			match = entry.search(package)
+			if match:
+				found.append(match.group(1))
+			else:
+				found.append(None)
+		packages_object.append(Package(found[0], parse_depends(found[1]), found[2]))
 	search_rdepends(packages_object)
-	file.close()
 	packages_object.sort(key=lambda package: package.name)
+	file.close()
 	return packages_object
 
 global packages_object
-packages_object = create_packages()
+packages_object = regex_packages()
 
 @app.route('/')
 def display_all():
