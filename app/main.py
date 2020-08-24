@@ -16,20 +16,18 @@ class Package:
 
 def parse_dependencies(dependencies):
 	names = []
-	if dependencies == None:
-		return names
-	for separatedByPipe in dependencies.split(' | '):
-		for separatedByComma in separatedByPipe.split(', '):
-			names.append(separatedByComma.split(' ')[0])
+	if dependencies is not None:
+		for separatedByPipe in dependencies.split(' | '):
+			for separatedByComma in separatedByPipe.split(', '):
+				names.append(separatedByComma.split(' ')[0])
 	return names
 
 def search_reverse_dependencies(packages_object):
 	for package1 in packages_object:
-		name = getattr(package1, 'name')
-		reverseDependencies = getattr(package1, 'reverseDependencies')
+		name = package1.name
 		for package2 in packages_object:
-			if name in getattr(package2, 'dependencies'):
-				reverseDependencies.append(getattr(package2, 'name'))
+			if name in package2.dependencies:
+				package1.reverseDependencies.append(package2.name)
 
 def regex_packages():
 	try:
@@ -49,7 +47,7 @@ def regex_packages():
 	packages_object = []
 	for package in packages_raw:
 		if 'Package: ' in package:
-			package += '\nEOF'
+			package += '\nEOF' # String must end with alphabetical value in order to regex work correctly.
 			values = []
 			for regexObject in regexList:
 				regexMatch = regexObject.search(package)
