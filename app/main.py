@@ -24,9 +24,8 @@ def parse_dependencies(dependencies):
 
 def search_reverse_dependencies(packages_object):
 	for package1 in packages_object:
-		name = package1.name
 		for package2 in packages_object:
-			if name in package2.dependencies:
+			if package1.name in package2.dependencies:
 				package1.reverseDependencies.append(package2.name)
 
 def regex_packages():
@@ -62,11 +61,6 @@ def regex_packages():
 
 global packages_object
 packages_object = regex_packages()
-
-# if __name__ =='__main__':
-# 	packages = regex_packages()
-# 	for package in packages:
-# 		print(package)
 
 @app.route('/')
 def display_all():
