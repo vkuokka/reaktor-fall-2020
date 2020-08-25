@@ -22,7 +22,7 @@ After succesful installation you can run the application with the following comm
 ```
 python3 wsgi.py
 ```
-If the lauch is succesful, similiar text should appear into terminal window:
+If the launch is succesful, similiar text should appear into terminal window:
 ```
  * Serving Flask app "app.main" (lazy loading)
  * Environment: production
