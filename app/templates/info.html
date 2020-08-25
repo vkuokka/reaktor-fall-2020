@@ -10,14 +10,14 @@
 		<p>{{ package.description }}</p>
 		<h2> Dependencies </h2>
         <ul>
-            {% for depend in package.depends %}
-            <li><a href="/{{ depend }}"> {{ depend }} </a></li>
+            {% for dependency in package.dependencies %}
+            <li><a href="/{{ dependency }}"> {{ dependency }} </a></li>
             {% endfor %}  
 		</ul>
 		<h2> Reverse dependencies </h2>
 		<ul>
-            {% for rdepend in package.rdepends %}
-            <li><a href="/{{ rdepend }}"> {{ rdepend }} </a></li>
+            {% for reverseDependency in package.reverseDependencies %}
+            <li><a href="/{{ reverseDependency }}"> {{ reverseDependency }} </a></li>
             {% endfor %}  
         </ul>
     </body>

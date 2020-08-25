@@ -1,59 +1,66 @@
+import re
 from flask import Flask, render_template
 
 app = Flask(__name__)
 
 class Package:
-	def __init__(self):
-		self.name = None
-		self.description = None
-		self.depends = []
-		self.rdepends = []
+	def __init__(self, name, dependencies, description):
+		self.name = name
+		self.dependencies = dependencies
+		self.description = description
+		self.reverseDependencies = []
 
-def parse_depends(line):
+	def __str__(self):
+		return str(self.name) + '\n' + str(self.description) + '\n' \
+		+ str(self.dependencies) + '\n' + str(self.reverseDependencies)
+
+def parse_dependencies(dependencies):
 	names = []
-	separated = line.split(', ')
-	for separate in separated:
-		names.append(separate.split(' ')[0])
+	if dependencies is not None:
+		for separatedByPipe in dependencies.split(' | '):
+			for separatedByComma in separatedByPipe.split(', '):
+				names.append(separatedByComma.split(' ')[0])
 	return names
 
-def search_rdepends(packages_object):
+def search_reverse_dependencies(packages_object):
 	for package1 in packages_object:
-		name = getattr(package1, 'name')
-		rdepends = getattr(package1, 'rdepends')
 		for package2 in packages_object:
-			if name in getattr(package2, 'depends'):
-				rdepends.append(getattr(package2, 'name'))
+			if package1.name in package2.dependencies:
+				package1.reverseDependencies.append(package2.name)
 
-def create_packages():
+def regex_packages():
 	try:
 		file = open('/var/lib/dpkg/status', 'r')
 	except IOError:
-		file = open('status.real', 'r')
+		try:
+			file = open('status.real', 'r')
+		except IOError:
+			raise SystemExit
 	packages_raw = file.read().split('\n\n')
-	packages_object = []
-	for package_raw in packages_raw:
-		if package_raw == '':
-			continue
-		lines = package_raw.split('\n')
-		package = Package()
-		for line in lines:
-			name_field = line.split(': ')
-			if name_field[0] == 'Package':
-				setattr(package, 'name', name_field[1])
-			elif name_field[0] == 'Description':
-				setattr(package, 'description', name_field[1])
-			elif name_field[0][0] == ' ':
-				setattr(package, 'description', str(getattr(package, 'description')) + name_field[0])
-			elif name_field[0] == 'Depends':
-				setattr(package, 'depends', parse_depends(name_field[1]))
-		packages_object.append(package)
-	search_rdepends(packages_object)
 	file.close()
+	regexList = [
+	re.compile(r'^Package:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL),
+	re.compile(r'^Depends:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL),
+	re.compile(r'^Description:\s(.+?(?=\n\S))', re.MULTILINE | re.DOTALL)
+	]
+	packages_object = []
+	for package in packages_raw:
+		if 'Package: ' in package:
+			package += '\nEOF' # String must end with alphabetical value in order to regex work correctly.
+			values = []
+			for regexObject in regexList:
+				regexMatch = regexObject.search(package)
+				if regexMatch:
+					values.append(regexMatch.group(1))
+				else:
+					values.append(None)
+			packages_object.append(Package(values[0], parse_dependencies(values[1]), values[2]))
+	search_reverse_dependencies(packages_object)
 	packages_object.sort(key=lambda package: package.name)
 	return packages_object
 
 global packages_object
-packages_object = create_packages()
+packages_object = regex_packages()
 
 @app.route('/')
 def display_all():
