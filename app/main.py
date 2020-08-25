@@ -66,9 +66,9 @@ packages_object = regex_packages()
 def display_all():
 	return render_template('index.html', packages=packages_object)
 
-@app.route('/<string:name>')
-def display_info(name):
+@app.route('/<string:value>')
+def display_info(value):
 	for package in packages_object:
-		if getattr(package, 'name') == name:
+		if package.name == value:
 			return render_template('info.html', package=package)
 	return 'Error :('
