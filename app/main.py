@@ -16,10 +16,11 @@ class Package:
 
 def parse_dependencies(dependencies):
 	names = []
-	if dependencies is not None:
-		for separatedByPipe in dependencies.split(' | '):
-			for separatedByComma in separatedByPipe.split(', '):
-				names.append(separatedByComma.split(' ')[0])
+	if dependencies is None:
+		return names
+	for separatedByPipe in dependencies.split(' | '):
+		for separatedByComma in separatedByPipe.split(', '):
+			names.append(separatedByComma.split(' ')[0])
 	return names
 
 def search_reverse_dependencies(packages_object):
@@ -35,7 +36,7 @@ def regex_packages():
 		try:
 			file = open('status.real', 'r')
 		except IOError:
-			raise SystemExit
+			raise SystemExit('Could not open file')
 	packages_raw = file.read().split('\n\n')
 	file.close()
 	regexList = [
@@ -45,16 +46,17 @@ def regex_packages():
 	]
 	packages_object = []
 	for package in packages_raw:
-		if 'Package: ' in package:
-			package += '\nEOF' # String must end with alphabetical value in order to regex work correctly.
-			values = []
-			for regexObject in regexList:
-				regexMatch = regexObject.search(package)
-				if regexMatch:
-					values.append(regexMatch.group(1))
-				else:
-					values.append(None)
-			packages_object.append(Package(values[0], parse_dependencies(values[1]), values[2]))
+		if 'Package: ' not in package:
+			continue
+		package += '\nEOF' # String must end with alphabetical value in order to regex work correctly.
+		values = []
+		for regexObject in regexList:
+			regexMatch = regexObject.search(package)
+			if regexMatch:
+				values.append(regexMatch.group(1))
+			else:
+				values.append(None)
+		packages_object.append(Package(values[0], parse_dependencies(values[1]), values[2]))
 	search_reverse_dependencies(packages_object)
 	packages_object.sort(key=lambda package: package.name)
 	return packages_object
@@ -72,3 +74,10 @@ def display_info(value):
 		if package.name == value:
 			return render_template('info.html', package=package)
 	return 'Error :('
+
+def main():
+	for package in packages_object:
+		print(package)
+
+if __name__ == '__main__':
+	main()
